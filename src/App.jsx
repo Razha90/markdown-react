@@ -2,22 +2,33 @@ import { useState, useEffect } from 'react';
 import Preview from './Preview';
 import Editor from './Editor';
 import './css/App.css';
+import { widthResizer,  heightResizer } from './resizerHooks';
 
 function App() {
   const [count, setCount] = useState('# Project malas asal responsive');
-  const [posisi, setPosisi] = useState(true);
+  const [posisi, setPosisi] = useState();
+
 
   useEffect(() => {
     const handleResize = () => {
       setPosisi(window.innerWidth > 620);
     };
-
     window.addEventListener('resize', handleResize);
+    window.addEventListener('load', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('load', handleResize);
     };
-  }, []);
+  }, [posisi]);
+
+  // useEffect(() => {
+  //   if (posisi) {
+  //     widthResizer();
+  //   } else {
+  //     heightResizer();
+  //   }
+  // }, [posisi]);
 
   useEffect(() => {
     const resizer = document.getElementById('dragMe');
@@ -28,21 +39,22 @@ function App() {
     let y = 0;
     let leftWidth = 0;
 
-    let x1 = 0
-    let y1 = 0
-    let rightWidth = 0;
+    let xy = 0;
+    let yx = 0;
+    let leftHeight = 0;
+
     const mouseDownHandler = function (e) {
       if (posisi) {
         x = e.clientX;
         y = e.clientY;
         leftWidth = leftSide.getBoundingClientRect().width;
-  
+
         document.addEventListener('mousemove', mouseMoveHandler);
         document.addEventListener('mouseup', mouseUpHandler);
       } else {
-        x1 = e.clientX;
-        y1 = e.clientY;
-        rightWidth = leftSide.getBoundingClientRect().height;
+        xy = e.clientY;
+        yx = e.clientY;
+        leftHeight = leftSide.getBoundingClientRect().height;
   
         document.addEventListener('mousemove', mouseMoveHandler);
         document.addEventListener('mouseup', mouseUpHandler);
@@ -55,8 +67,8 @@ function App() {
         const newLeftWidth = leftWidth + dx;
         leftSide.style.width = `${newLeftWidth}px`;
       } else {
-        const dx = e.clientY - y1;
-        const newLeftHeight = rightWidth + dx;
+        const dy = e.clientY - xy;
+        const newLeftHeight = leftHeight + dy;
         leftSide.style.height = `${newLeftHeight}px`;
       }
     };
@@ -68,12 +80,11 @@ function App() {
 
     resizer.addEventListener('mousedown', mouseDownHandler);
 
-    // Cleanup: remove event listener when component unmounts
     return () => {
       resizer.removeEventListener('mousedown', mouseDownHandler);
     };
-  }, []);
-  
+  }, [posisi]);
+
   return (
     <div id='app'>
       <Editor setText={setCount} text={count}/>
